@@ -125,11 +125,12 @@ function page(fromRaw: string | undefined): string {
   }
   .foot svg{ flex:none; margin-top:.12rem; stroke:var(--amber) }
   .src{
-    display:inline-block; margin-top:1rem;
-    font:.74rem/1 var(--mono); letter-spacing:.04em;
-    color:var(--muted); text-decoration:none;
+    display:inline-block; margin-top:1.3rem;
+    font:.9rem/1.3 var(--sans); color:var(--amber);
+    text-decoration:underline; text-underline-offset:3px; text-decoration-thickness:1px;
   }
-  .src:hover{ color:var(--amber) }
+  .src:hover{ text-decoration-thickness:2px }
+  .src:focus-visible{ outline:2px solid var(--amber); outline-offset:2px }
   [data-anim]{ opacity:0; animation:rise .6s cubic-bezier(.2,.7,.2,1) forwards }
   @keyframes rise{ from{ transform:translateY(9px) } to{ opacity:1; transform:none } }
   @keyframes pulse{
