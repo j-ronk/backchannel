@@ -15,13 +15,13 @@ describe("landing", () => {
 
   it("generic title when no ?from", async () => {
     const r = await get();
-    expect(r.body).toContain("<title>You&#39;re invited to collaborate in a Claude Code session</title>");
+    expect(r.body).toContain("<title>You&#39;re invited to a shared AI coding session</title>");
     expect(r.body).not.toContain("wants to share");
   });
 
   it("personalized title when ?from is present", async () => {
     const r = await get("jay");
-    expect(r.body).toContain("jay wants to share their Claude Code session with you");
+    expect(r.body).toContain("jay wants to share their AI coding session with you");
   });
 
   it("HTML-escapes a malicious ?from (no XSS)", async () => {
@@ -40,10 +40,10 @@ describe("landing", () => {
     expect(r.body).not.toContain("x".repeat(61));
   });
 
-  it("includes the install command and the join scaffold", async () => {
+  it("links to install instructions and includes the join scaffold", async () => {
     const r = await get();
-    expect(r.body).toContain("/plugin marketplace add j-ronk/backchannel");
-    expect(r.body).toContain("/plugin install backchannel@backchannel");
+    expect(r.body).toContain('href="https://github.com/j-ronk/backchannel#backchannel"'); // generic install link, not tool-specific
+    expect(r.body).not.toContain("/plugin install");                                       // no Claude-only install commands
     expect(r.body).toContain('id="join"');
     expect(r.body).toContain("location.hash"); // client assembles the key-bearing link
   });

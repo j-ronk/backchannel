@@ -19,8 +19,8 @@ function page(fromRaw: string | undefined): string {
   const named = from.length > 0;
   const safeFrom = esc(from);
   const title = named
-    ? `${safeFrom} wants to share their Claude Code session with you`
-    : `You're invited to collaborate in a Claude Code session`;
+    ? `${safeFrom} wants to share their AI coding session with you`
+    : `You're invited to a shared AI coding session`;
   const safeTitle = named ? title : esc(title); // safeFrom already escaped; escape the generic literal's apostrophe
   const desc = esc(
     "Two sessions, shared context. Neither side runs the other's commands. End-to-end encrypted, so the relay only ever sees ciphertext.",
@@ -93,15 +93,10 @@ function page(fromRaw: string | undefined): string {
   }
   h1 .caret{ color:var(--amber); margin-right:.45rem }
   .lede{ margin:0 0 2rem; max-width:48ch; color:var(--muted) }
-  .steps{ list-style:none; margin:0; padding:0 }
-  .step{ margin:0 0 1.5rem }
+  .step{ margin:0 }
   .stephead{
-    display:flex; align-items:center; gap:.6rem;
-    font:600 .82rem/1.3 var(--mono); color:var(--ink);
-  }
-  .num{
-    flex:none; font:600 .68rem/1 var(--mono); color:var(--amber);
-    border:1px solid var(--line); border-radius:6px; padding:.34rem .44rem;
+    font:600 .68rem/1 var(--mono); letter-spacing:.14em;
+    text-transform:uppercase; color:var(--muted);
   }
   .code{ position:relative; margin-top:.7rem }
   .code pre{
@@ -155,33 +150,24 @@ function page(fromRaw: string | undefined): string {
       <span class="rule"></span>
     </div>
     <div class="scr">
-      <h1 data-anim style="animation-delay:.05s"><span class="caret">▸</span>${safeHeadline} in Claude Code.</h1>
+      <h1 data-anim style="animation-delay:.05s"><span class="caret">▸</span>${safeHeadline}.</h1>
       <p class="lede" data-anim style="animation-delay:.11s">Two sessions, shared context. Neither side runs the other's commands.</p>
 
-      <ol class="steps">
-        <li class="step" data-anim style="animation-delay:.17s">
-          <div class="stephead"><span class="num">01</span> Install once</div>
-          <div class="code">
-            <pre><code id="install">/plugin marketplace add ${esc(REPO)}
-/plugin install backchannel@backchannel</code></pre>
-            <button class="copy" type="button" data-target="install" aria-label="Copy install commands">Copy</button>
-          </div>
-        </li>
-        <li class="step" data-anim style="animation-delay:.23s">
-          <div class="stephead"><span class="num">02</span> Join the room</div>
-          <div class="code" id="joinwrap">
-            <pre><code id="join">&hellip;</code></pre>
-            <button class="copy" type="button" data-target="join" aria-label="Copy join command">Copy</button>
-          </div>
-          <p class="note" id="note"></p>
-        </li>
-      </ol>
+      <div class="step" data-anim style="animation-delay:.18s">
+        <div class="stephead">Room link</div>
+        <div class="code" id="joinwrap">
+          <pre><code id="join">&hellip;</code></pre>
+          <button class="copy" type="button" data-target="join" aria-label="Copy room link">Copy</button>
+        </div>
+        <p class="note" id="note"></p>
+      </div>
 
-      <div class="foot" data-anim style="animation-delay:.29s">
+      <a class="src" data-anim style="animation-delay:.26s" href="https://github.com/${esc(REPO)}#backchannel">New to backchannel? Install it in your AI coding tool &#8599;</a>
+
+      <div class="foot" data-anim style="animation-delay:.32s">
         <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="10" width="16" height="10" rx="2"></rect><path d="M8 10V7a4 4 0 0 1 8 0v3"></path></svg>
         <span>End-to-end encrypted. The relay only ever sees ciphertext.</span>
       </div>
-      <a class="src" data-anim style="animation-delay:.33s" href="https://github.com/${esc(REPO)}">github.com/${esc(REPO)} &#8599;</a>
     </div>
   </div>
 
@@ -193,8 +179,8 @@ function page(fromRaw: string | undefined): string {
     var noteEl = document.getElementById('note');
     if (key) {
       var cleanLink = location.origin + location.pathname + location.hash; // drop ?from, keep #k
-      joinEl.textContent = '/backchannel:join ' + cleanLink + ' <your name>';
-      noteEl.textContent = 'Replace <your name> with how you want to appear.';
+      joinEl.textContent = cleanLink;
+      noteEl.textContent = 'Give this link to your backchannel-enabled agent to join the room.';
     } else {
       joinEl.textContent = '(this link is missing its key)';
       joinWrap.className = 'code err';
