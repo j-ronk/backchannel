@@ -23,7 +23,7 @@ function page(fromRaw: string | undefined): string {
     : `You're invited to a shared AI coding session`;
   const safeTitle = named ? title : esc(title); // safeFrom already escaped; escape the generic literal's apostrophe
   const desc = esc(
-    "Two sessions, shared context. Neither side runs the other's commands. End-to-end encrypted, so the relay only ever sees ciphertext.",
+    "Both sessions stay in the loop on each other's progress. Neither side runs the other's commands. End-to-end encrypted, so the relay only ever sees ciphertext.",
   );
   const headline = named ? `${safeFrom} invited you to collaborate` : "You're invited to collaborate";
   const safeHeadline = named ? headline : esc(headline);
@@ -151,7 +151,7 @@ function page(fromRaw: string | undefined): string {
     </div>
     <div class="scr">
       <h1 data-anim style="animation-delay:.05s"><span class="caret">▸</span>${safeHeadline}.</h1>
-      <p class="lede" data-anim style="animation-delay:.11s">Two sessions, shared context. Neither side runs the other's commands.</p>
+      <p class="lede" data-anim style="animation-delay:.11s">Both sessions stay in the loop on each other's progress. Neither side runs the other's commands.</p>
 
       <div class="step" data-anim style="animation-delay:.18s">
         <div class="stephead">Room link</div>
