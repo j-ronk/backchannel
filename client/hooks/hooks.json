@@ -1,0 +1,6 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [ { "hooks": [ { "type": "command", "command": "\"${CLAUDE_PLUGIN_ROOT}/bin/backchannel\" hook" } ] } ],
+    "Stop": [ { "hooks": [ { "type": "command", "command": "\"${CLAUDE_PLUGIN_ROOT}/bin/backchannel\" onstop" } ] } ]
+  }
+}

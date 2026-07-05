@@ -1,0 +1,32 @@
+{
+  "name": "backchannel-server",
+  "version": "0.1.0",
+  "description": "backchannel relay — a content-blind, E2E-encrypted ciphertext store (AWS CDK: API Gateway + Lambda + DynamoDB).",
+  "license": "MIT",
+  "author": "Jay Ronk",
+  "repository": { "type": "git", "url": "https://github.com/j-ronk/backchannel" },
+  "homepage": "https://github.com/j-ronk/backchannel",
+  "private": true,
+  "scripts": {
+    "build": "tsc",
+    "test": "vitest",
+    "cdk": "npm run build && cdk"
+  },
+  "keywords": ["e2e-encryption", "claude-code", "agent", "collaboration", "aws-cdk"],
+  "type": "module",
+  "devDependencies": {
+    "@types/node": "^20.0.0",
+    "aws-cdk": "^2.1128.1",
+    "aws-cdk-lib": "^2.260.0",
+    "aws-sdk-client-mock": "^4.1.0",
+    "constructs": "^10.6.0",
+    "esbuild": "^0.28.1",
+    "tsx": "^4.22.4",
+    "typescript": "^6.0.3",
+    "vitest": "^4.1.9"
+  },
+  "dependencies": {
+    "@aws-sdk/client-dynamodb": "^3.1075.0",
+    "@aws-sdk/lib-dynamodb": "^3.1075.0"
+  }
+}

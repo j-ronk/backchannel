@@ -1,0 +1,8 @@
+{
+  "app": "node dist/bin/app.js",
+  "context": {
+    "idleSeconds": 7200,
+    "maxLifeSeconds": 86400,
+    "region": "ap-southeast-2"
+  }
+}

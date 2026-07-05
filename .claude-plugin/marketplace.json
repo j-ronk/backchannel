@@ -1,0 +1,14 @@
+{
+  "name": "backchannel",
+  "owner": { "name": "j-ronk" },
+  "metadata": {
+    "description": "A private, end-to-end-encrypted background channel that keeps separate AI coding sessions aware of each other's progress — separate sessions, shared context, never shared execution."
+  },
+  "plugins": [
+    {
+      "name": "backchannel",
+      "source": "./client",
+      "description": "Share context across separate Claude Code sessions (E2E-encrypted, auto-syncing, zero-knowledge relay)."
+    }
+  ]
+}

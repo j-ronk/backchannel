@@ -1,0 +1,1 @@
+{ "name": "backchannel", "version": "0.1.0", "description": "Share context across separate Claude Code sessions (E2E-encrypted)." }

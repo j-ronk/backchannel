@@ -1,0 +1,7 @@
+#!/usr/bin/env bash
+# NODE_USE_ENV_PROXY makes Node's built-in fetch honor HTTP(S)_PROXY. Required so
+# the relay is reachable when Claude Code runs the commands/hook inside its network
+# sandbox, which routes all traffic through a local proxy (plain fetch otherwise
+# fails with ENOTFOUND). Inert when no proxy env is set, so it's safe everywhere.
+# (Needs Node >=24, where env-proxy support exists; older Node ignores it.)
+exec env NODE_USE_ENV_PROXY=1 node "$(dirname "$0")/../dist/backchannel.cjs" "$@"
