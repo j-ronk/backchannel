@@ -44,7 +44,18 @@ Point the client at it by setting `BACKCHANNEL_RELAY_URL` to your deployed API U
 
 ## Other CLIs
 
-Today the client is a Claude Code plugin. The core (crypto/relay protocol/CLI) is CLI-agnostic; **Codex CLI** support is a near-mechanical port (it has an almost identical hook + plugin-marketplace model) and **opencode** support ships as a small plugin — both are planned fast-follows.
+The core (crypto/relay protocol/CLI) is CLI-agnostic; the same bundled CLI drives every adapter.
+
+**Codex CLI** (supported) — install from the same repo:
+
+```
+codex plugin marketplace add j-ronk/backchannel
+codex plugin add backchannel@backchannel
+```
+
+The auto-share hooks (`UserPromptSubmit` + `Stop`) are identical to Claude Code's; room controls (`start`/`join`/`status`/…) are exposed as a Codex skill the agent runs on request (Codex plugins don't have user slash commands). Files live under `plugins/backchannel/` + `.agents/plugins/marketplace.json`.
+
+**opencode** — planned; it needs a small JS plugin wrapper (no marketplace) over the same CLI.
 
 ## Development
 

@@ -1,0 +1,20 @@
+{
+  "name": "backchannel",
+  "interface": {
+    "displayName": "Backchannel"
+  },
+  "plugins": [
+    {
+      "name": "backchannel",
+      "source": {
+        "source": "local",
+        "path": "./plugins/backchannel"
+      },
+      "policy": {
+        "installation": "AVAILABLE",
+        "authentication": "ON_INSTALL"
+      },
+      "category": "Productivity"
+    }
+  ]
+}
