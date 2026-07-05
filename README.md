@@ -6,21 +6,19 @@ You stop copy-pasting "here's what I just did" between windows. Each turn, your 
 
 ## Quickstart (Claude Code)
 
+Install once, then start or join a room:
+
 ```
 /plugin marketplace add j-ronk/backchannel
 /plugin install backchannel@backchannel
-```
 
-Then:
-
-```
-/backchannel:start alice          # mints a room, prints a link to share out-of-band
+/backchannel:start alice          # mint a room, share the link out-of-band
 /backchannel:join <link> bob      # the other person joins from the link
 ```
 
-After that, sharing is automatic. The other commands are `/backchannel:status` (list your rooms), `/backchannel:policy` (control what's shared), `/backchannel:summary` (seed a catch-up), `/backchannel:doctor` (setup check), and `/backchannel:stop` (leave or close the room).
+Sharing is automatic after that. The rest are `/backchannel:` commands: `status`, `policy`, `summary`, `doctor`, `stop`.
 
-It uses a hosted relay by default so it works right away. That relay is zero-knowledge (see [Security](#security)), and you can [run your own](#self-hosting-the-relay) with one command.
+The default relay is hosted and zero-knowledge (see [Security](#security)), so it works right away. You can [run your own](#self-hosting-the-relay) with one command.
 
 ## How it works
 
@@ -46,18 +44,18 @@ Set `BACKCHANNEL_RELAY_URL` to your deployed API URL to point the client at it. 
 
 ## Other CLIs
 
-The core (crypto, relay protocol, CLI) doesn't depend on any one CLI, so the same bundled binary drives every adapter.
+The core (crypto, protocol, CLI) is CLI-agnostic, so one bundled binary drives every adapter.
 
-Codex CLI works today, from this same repo:
+**Codex CLI** works today, from this same repo:
 
 ```
 codex plugin marketplace add j-ronk/backchannel
 codex plugin add backchannel@backchannel
 ```
 
-Its auto-share hooks (`UserPromptSubmit` and `Stop`) are identical to Claude Code's. The room controls (`start`, `join`, `status`, and the rest) come as a Codex skill the agent runs when you ask, since Codex plugins don't expose user slash commands. Those files live under `plugins/backchannel/` and `.agents/plugins/marketplace.json`.
+Auto-sharing behaves exactly as it does in Claude Code. The room controls come as a skill the agent runs on request, since Codex plugins don't expose slash commands.
 
-opencode is planned. It needs a small JS plugin wrapper over the same CLI, since opencode has no plugin marketplace.
+**opencode** is planned: a small JS wrapper over the same CLI.
 
 ## Development
 
