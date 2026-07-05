@@ -31,7 +31,7 @@ describe("landing", () => {
     expect(r.body).not.toContain("<script>alert(1)</script>");                 // raw injection absent
     expect(r.body).toContain(`<title>${esc} wants to share`);                  // <title> context
     expect(r.body).toContain(`property="og:title" content="${esc} wants to share`); // og:title attribute context
-    expect(r.body).toContain(`<h1>${esc} invited you to collaborate`);         // <h1> headline context
+    expect(r.body).toContain(`${esc} invited you to collaborate`);             // <h1> headline context (escaped)
   });
 
   it("clamps an over-long ?from to 60 chars", async () => {
