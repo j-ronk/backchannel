@@ -36,9 +36,9 @@ export function lastAssistantText(transcriptPath: string): string {
   return "";
 }
 
-// Returns the text of the LAST non-empty `[[backchannel]] …` line, trimmed, or null.
+// Returns the text of the LAST non-empty `[[backchannel broadcast]] …` line, trimmed, or null.
 export function extractShareMarker(text: string): string | null {
-  const re = /^[ \t]*\[\[backchannel\]\][ \t]?(.*)$/gm;
+  const re = /^[ \t]*\[\[backchannel[ \t]+broadcast\]\][ \t]?(.*)$/gm;
   let m: RegExpExecArray | null;
   let last: string | null = null;
   while ((m = re.exec(text)) !== null) {

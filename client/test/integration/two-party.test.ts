@@ -20,7 +20,7 @@ describe.skipIf(!relay)("two-party live", () => {
 
     // A's onstop tries to post a marker; the relay 401s the wrong token. onstop is fail-open → exit 0, nothing stored.
     const tp = "/tmp/backchannel-itest-bad.jsonl";
-    writeFileSync(tp, JSON.stringify({ type: "assistant", message: { role: "assistant", content: [{ type: "text", text: "[[backchannel]] TAMPER_SENTINEL must not arrive" }] } }));
+    writeFileSync(tp, JSON.stringify({ type: "assistant", message: { role: "assistant", content: [{ type: "text", text: "[[backchannel broadcast]] TAMPER_SENTINEL must not arrive" }] } }));
     const bad = await run(["onstop"], {} as any, JSON.stringify({ cwd: A, transcript_path: tp }));
     expect(bad.exit).toBe(0); // fail-open: a rejected post never disrupts the turn
 
@@ -40,7 +40,7 @@ describe.skipIf(!relay)("two-party live", () => {
     const link = start.stdout.split("\n").pop()!.trim();
     await run(["join", link, "--name", "B"], { PWD: BS } as any, "");
     const tp = "/tmp/backchannel-as-tp.jsonl";
-    writeFileSync(tp, JSON.stringify({ type: "assistant", message: { role: "assistant", content: [{ type: "text", text: "[[backchannel]] auto-share works" }] } }));
+    writeFileSync(tp, JSON.stringify({ type: "assistant", message: { role: "assistant", content: [{ type: "text", text: "[[backchannel broadcast]] auto-share works" }] } }));
     await run(["onstop"], {} as any, JSON.stringify({ cwd: AS, transcript_path: tp }));
     const hook = await run(["hook"], {} as any, JSON.stringify({ cwd: BS }));
     expect(JSON.parse(hook.stdout).hookSpecificOutput.additionalContext).toContain("auto-share works");

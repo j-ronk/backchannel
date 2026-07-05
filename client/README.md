@@ -40,7 +40,7 @@ Codex CLI works too, from the same repo: `codex plugin marketplace add j-ronk/ba
 - `/backchannel:stop` leaves the room, or closes it if you started it
 - `/backchannel:doctor` checks your setup
 
-Sharing is automatic, with no manual share command. On each turn where you do real work, your agent appends one short `[[backchannel]]` note that follows the share policy, and the plugin posts it to the room encrypted. The other person sees it on their next turn. Notes from others arrive as clearly-labelled, information-only observations. Redaction is best-effort (an LLM can slip), so don't rely on the policy to protect real secrets.
+Sharing is automatic, with no manual share command. On each turn where you do real work, your agent appends one short `[[backchannel broadcast]]` note that follows the share policy, and the plugin posts it to the room encrypted. The other person sees it on their next turn. Notes from others arrive as clearly-labelled, information-only observations. Redaction is best-effort (an LLM can slip), so don't rely on the policy to protect real secrets.
 
 <h2 id="command-sandbox-users">Command sandbox users: two grants</h2>
 

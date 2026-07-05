@@ -10,7 +10,7 @@ There are three parts to the overhead, all deterministic:
 
 1. The send directive, injected into context on every active turn (input). This is the only always-on cost.
 2. Received messages: a short preamble plus one line per unread note (input), only on turns where something arrived.
-3. Your `[[backchannel]]` line, appended to your reply (output), only on turns where you share.
+3. Your `[[backchannel broadcast]]` line, appended to your reply (output), only on turns where you share.
 
 ## Measured component sizes
 

@@ -65,7 +65,7 @@ describe("cli", () => {
     const ctx = JSON.parse(r.stdout).hookSpecificOutput.additionalContext;
     expect(ctx).not.toContain("my own note"); // our own message is still filtered out — not echoed back
     expect(ctx).not.toContain("observations reported by other participants"); // no observation block (nothing to show)
-    expect(ctx).toContain("[[backchannel]]"); // but the standing send directive is always injected
+    expect(ctx).toContain("[[backchannel broadcast]]"); // but the standing send directive is always injected
     expect(readState(CWD)!.cursor).toBe(1); // cursor still advances past our own post
   });
 
@@ -119,7 +119,7 @@ describe("cli", () => {
     fetchOnce(200, { events: [], cursor: 0 });
     const r = await run(["hook"], {} as any, JSON.stringify({ cwd: CWD }));
     const ctx = JSON.parse(r.stdout).hookSpecificOutput.additionalContext;
-    expect(ctx).toContain("[[backchannel]]");
+    expect(ctx).toContain("[[backchannel broadcast]]");
     expect(ctx).toContain("share the auth work");
   });
 
@@ -142,7 +142,7 @@ describe("cli", () => {
     const r = await run(["hook"], {} as any, JSON.stringify({ cwd: CWD }));
     expect(r.exit).toBe(0);
     const ctx = JSON.parse(r.stdout).hookSpecificOutput.additionalContext;
-    expect(ctx).toContain("[[backchannel]]"); // directive still injected despite the read failure
+    expect(ctx).toContain("[[backchannel broadcast]]"); // directive still injected despite the read failure
   });
 
   it("hook does not advance the cursor when the relay returns no events", async () => {
@@ -156,14 +156,14 @@ describe("cli", () => {
     expect(readState(CWD)!.cursor).toBe(0); // empty response → nothing to advance past
   });
 
-  it("onstop extracts the [[backchannel]] line from the transcript and posts it; clears pendingCatchup", async () => {
+  it("onstop extracts the [[backchannel broadcast]] line from the transcript and posts it; clears pendingCatchup", async () => {
     fetchOnce(201, { roomId: "ROOMS" });
     const { run } = await import("../src/cli.js");
     await run(["start", "--name", "A"], { BACKCHANNEL_RELAY_URL: "https://relay", PWD: CWD } as any, ""); // pendingCatchup=true
     expect(readState(CWD)!.pendingCatchup).toBe(true);
     vi.restoreAllMocks();
     const tp = "/tmp/backchannel-onstop-test.jsonl";
-    writeFileSync(tp, JSON.stringify({ type: "assistant", message: { role: "assistant", content: [{ type: "text", text: "did work\n[[backchannel]] fixed the token check" }] } }));
+    writeFileSync(tp, JSON.stringify({ type: "assistant", message: { role: "assistant", content: [{ type: "text", text: "did work\n[[backchannel broadcast]] fixed the token check" }] } }));
     const post = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({ seq: 1, ts: "t" }), { status: 200 }) as any);
     const r = await run(["onstop"], {} as any, JSON.stringify({ cwd: CWD, transcript_path: tp }));
     expect(r.exit).toBe(0);
@@ -195,7 +195,7 @@ describe("cli", () => {
     await run(["start", "--name", "A"], { BACKCHANNEL_RELAY_URL: "https://relay", PWD: CWD } as any, ""); // pendingCatchup=true
     expect(readState(CWD)!.pendingCatchup).toBe(true);
     const tp = "/tmp/backchannel-onstop-fail.jsonl";
-    writeFileSync(tp, JSON.stringify({ type: "assistant", message: { role: "assistant", content: [{ type: "text", text: "did work\n[[backchannel]] catch-up summary line" }] } }));
+    writeFileSync(tp, JSON.stringify({ type: "assistant", message: { role: "assistant", content: [{ type: "text", text: "did work\n[[backchannel broadcast]] catch-up summary line" }] } }));
     vi.restoreAllMocks();
     vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("relay down"));
     const r = await run(["onstop"], {} as any, JSON.stringify({ cwd: CWD, transcript_path: tp }));
@@ -244,7 +244,7 @@ describe("cli", () => {
     fetchOnce(200, { events: [], cursor: 0 });
     const r = await run(["hook"], {} as any, JSON.stringify({ session_id: SID, cwd: "/dir/TWO-different" }));
     const ctx = JSON.parse(r.stdout).hookSpecificOutput.additionalContext;
-    expect(ctx).toContain("[[backchannel]]"); // directive injected → room resolved despite cwd change
+    expect(ctx).toContain("[[backchannel broadcast]]"); // directive injected → room resolved despite cwd change
     clearState(SID);
   });
 
@@ -255,7 +255,7 @@ describe("cli", () => {
     await run(["start", "--name", "A"], { BACKCHANNEL_RELAY_URL: "https://relay", PWD: CWD, CLAUDE_CODE_SESSION_ID: SID } as any, "");
     vi.restoreAllMocks();
     const post = vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response(JSON.stringify({ seq: 1, ts: "t" }), { status: 200 }) as any);
-    const stdin = JSON.stringify({ session_id: SID, last_assistant_message: "did work\n[[backchannel]] from last_assistant_message", transcript_path: "/nonexistent.jsonl" });
+    const stdin = JSON.stringify({ session_id: SID, last_assistant_message: "did work\n[[backchannel broadcast]] from last_assistant_message", transcript_path: "/nonexistent.jsonl" });
     const r = await run(["onstop"], {} as any, stdin);
     expect(r.exit).toBe(0);
     expect(post).toHaveBeenCalledTimes(1);
@@ -273,7 +273,7 @@ describe("cli", () => {
     const r = await run(["hook"], {} as any, JSON.stringify({ cwd: CWD }));
     const ctx = JSON.parse(r.stdout).hookSpecificOutput.additionalContext;
     expect(ctx).toContain("has closed");     // one-time close note delivered
-    expect(ctx).not.toContain("[[backchannel]]"); // send directive NOT injected
+    expect(ctx).not.toContain("[[backchannel broadcast]]"); // send directive NOT injected
     expect(readState(CWD)!.status).toBe("ended");
   });
 
@@ -284,7 +284,7 @@ describe("cli", () => {
     vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("network down")); // no .status → transient
     const r = await run(["hook"], {} as any, JSON.stringify({ cwd: CWD }));
     const ctx = JSON.parse(r.stdout).hookSpecificOutput.additionalContext;
-    expect(ctx).toContain("[[backchannel]]");        // directive still injected
+    expect(ctx).toContain("[[backchannel broadcast]]");        // directive still injected
     expect(readState(CWD)!.status).toBe("active"); // NOT flipped off on a transient error
   });
 
@@ -296,7 +296,7 @@ describe("cli", () => {
     const r = await run(["hook"], {} as any, JSON.stringify({ cwd: CWD }));
     const ctx = JSON.parse(r.stdout).hookSpecificOutput.additionalContext;
     expect(ctx).toContain("has closed");     // one-time close note delivered
-    expect(ctx).not.toContain("[[backchannel]]"); // send directive NOT injected
+    expect(ctx).not.toContain("[[backchannel broadcast]]"); // send directive NOT injected
     expect(readState(CWD)!.status).toBe("ended"); // local state flipped off
     // next turn: early-return on the ended state — no relay call, empty output
     vi.restoreAllMocks();

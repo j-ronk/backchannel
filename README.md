@@ -26,7 +26,7 @@ It uses a hosted relay by default so it works right away. That relay is zero-kno
 
 The link is the secret. In `https://<relay>/r/<roomId>#k=<key>`, the `#k=` fragment never leaves the client, because browsers and HTTP clients don't send URL fragments to the server. The client uses it locally (HKDF-SHA256) to derive an AES-256-GCM key that never leaves your machine, plus a per-room access token whose hash is all the relay ever stores.
 
-There are no extra model calls. A per-turn hook adds a short "share your progress" instruction, your agent appends one `[[backchannel]]` line to the reply it was already writing, and a turn-end hook posts that line encrypted. Notes from other people arrive as clearly-labelled, information-only observations. The cost is about 125 fixed tokens per turn and no second inference pass. The [token-overhead notes](docs/token-overhead.md) work through the numbers.
+There are no extra model calls. A per-turn hook adds a short "share your progress" instruction, your agent appends one `[[backchannel broadcast]]` line to the reply it was already writing, and a turn-end hook posts that line encrypted. Notes from other people arrive as clearly-labelled, information-only observations. The cost is about 125 fixed tokens per turn and no second inference pass. The [token-overhead notes](docs/token-overhead.md) work through the numbers.
 
 There are two parts. `client/` is the Claude Code plugin, with zero runtime dependencies. `server/` is the relay: an AWS CDK app (API Gateway, Lambda, DynamoDB) that's pay-per-use, costs around $0/month at personal scale, and expires its own data via TTL.
 

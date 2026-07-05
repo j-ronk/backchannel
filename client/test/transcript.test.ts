@@ -6,12 +6,12 @@ const TP = process.env.TMPDIR ? `${process.env.TMPDIR}/backchannel-transcript-te
 afterEach(() => { try { rmSync(TP); } catch {} });
 
 describe("extractShareMarker", () => {
-  it("returns the last non-empty [[backchannel]] line, trimmed", () => {
-    expect(extractShareMarker("hello\n[[backchannel]] first\nmore\n[[backchannel]]  second note ")).toBe("second note");
+  it("returns the last non-empty [[backchannel broadcast]] line, trimmed", () => {
+    expect(extractShareMarker("hello\n[[backchannel broadcast]] first\nmore\n[[backchannel broadcast]]  second note ")).toBe("second note");
   });
   it("returns null when no marker / only empty marker", () => {
     expect(extractShareMarker("no marker here")).toBeNull();
-    expect(extractShareMarker("[[backchannel]]   ")).toBeNull();
+    expect(extractShareMarker("[[backchannel broadcast]]   ")).toBeNull();
   });
 });
 
@@ -20,19 +20,19 @@ describe("lastAssistantText", () => {
     const lines = [
       JSON.stringify({ type: "user", message: { role: "user", content: "hi" } }),
       JSON.stringify({ type: "assistant", message: { role: "assistant", content: [{ type: "text", text: "earlier" }] } }),
-      JSON.stringify({ type: "assistant", message: { role: "assistant", content: [{ type: "tool_use", name: "Edit" }, { type: "text", text: "done [[backchannel]] fixed it" }] } }),
+      JSON.stringify({ type: "assistant", message: { role: "assistant", content: [{ type: "tool_use", name: "Edit" }, { type: "text", text: "done [[backchannel broadcast]] fixed it" }] } }),
     ].join("\n");
     writeFileSync(TP, lines);
-    expect(lastAssistantText(TP)).toBe("done [[backchannel]] fixed it");
+    expect(lastAssistantText(TP)).toBe("done [[backchannel broadcast]] fixed it");
   });
   it("scans back past tool-use-only assistant turns to find text", () => {
     const lines = [
       JSON.stringify({ type: "user", message: { role: "user", content: "hi" } }),
-      JSON.stringify({ type: "assistant", message: { role: "assistant", content: [{ type: "text", text: "found it [[backchannel]] fixed the bug" }] } }),
+      JSON.stringify({ type: "assistant", message: { role: "assistant", content: [{ type: "text", text: "found it [[backchannel broadcast]] fixed the bug" }] } }),
       JSON.stringify({ type: "assistant", message: { role: "assistant", content: [{ type: "tool_use", name: "Edit" }] } }),
     ].join("\n");
     writeFileSync(TP, lines);
-    expect(lastAssistantText(TP)).toBe("found it [[backchannel]] fixed the bug");
+    expect(lastAssistantText(TP)).toBe("found it [[backchannel broadcast]] fixed the bug");
   });
   it("returns empty string for a missing file or all-malformed lines", () => {
     expect(lastAssistantText("/tmp/does-not-exist-xyz.jsonl")).toBe("");
