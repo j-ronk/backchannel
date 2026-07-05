@@ -43,7 +43,9 @@ describe.skipIf(!relay)("two-party live", () => {
     writeFileSync(tp, JSON.stringify({ type: "assistant", message: { role: "assistant", content: [{ type: "text", text: "[[backchannel broadcast]] auto-share works" }] } }));
     await run(["onstop"], {} as any, JSON.stringify({ cwd: AS, transcript_path: tp }));
     const hook = await run(["hook"], {} as any, JSON.stringify({ cwd: BS }));
-    expect(JSON.parse(hook.stdout).hookSpecificOutput.additionalContext).toContain("auto-share works");
+    const ctx = JSON.parse(hook.stdout).hookSpecificOutput.additionalContext;
+    expect(ctx).toContain("just started this room"); // A's start greeting reaches the joiner
+    expect(ctx).toContain("auto-share works");        // and A's turn marker
     rmSync(tp);
   }, 30000);
 });

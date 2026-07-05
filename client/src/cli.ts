@@ -5,7 +5,7 @@ import { buildLink, parseLink } from "./link.js";
 import { readState, writeState, clearState, listStates, RoomState } from "./state.js";
 import { apiCreateRoom, apiPostEvent, apiGetEvents, apiCloseRoom } from "./api.js";
 import { lastAssistantText, extractShareMarker } from "./transcript.js";
-import { readFileSync } from "node:fs";
+import { writeFileSync, rmSync, mkdirSync } from "node:fs";
 import { homedir } from "node:os";
 
 const DEFAULT_RELAY = "https://relay.ronk.au";
@@ -28,8 +28,24 @@ const cwdOf = (env: NodeJS.ProcessEnv) => env.PWD || process.cwd();
 const keyFromEnv = (env: NodeJS.ProcessEnv) => env.CLAUDE_CODE_SESSION_ID || cwdOf(env);
 const keyFromHook = (j: any) => j.session_id || j.cwd || "";
 
+const USAGE = [
+  "backchannel — shared context across separate AI coding sessions",
+  "",
+  "Usage: backchannel <command>",
+  "",
+  "  start --name <name>          mint a room, print its links, and greet the room",
+  "  join <link> --name <name>    join a room from its link",
+  "  status                       list this machine's rooms and whether each is live",
+  "  policy [<text>]              show or set what this session shares",
+  "  summary                      queue a catch-up of this session for next turn",
+  "  stop                         leave the room (closes it if you started it)",
+  "  doctor                       check Node, relay reachability, and the state dir",
+  "  hook | onstop                internal per-turn hooks (run automatically)",
+].join("\n");
+
 export async function run(argv: string[], env: NodeJS.ProcessEnv, stdin: string): Promise<{ stdout: string; exit: number }> {
   const cmd = argv[0];
+  if (!cmd || cmd === "help" || cmd === "--help" || cmd === "-h") return { stdout: USAGE, exit: 0 };
   try {
     if (cmd === "start") return await start(argv, env);
     if (cmd === "join") return await join(argv, env);
@@ -40,7 +56,7 @@ export async function run(argv: string[], env: NodeJS.ProcessEnv, stdin: string)
     if (cmd === "doctor") return await doctor(env);
     if (cmd === "hook") return await hook(stdin);
     if (cmd === "onstop") return await onstop(stdin);
-    return { stdout: `unknown command: ${cmd}`, exit: 1 };
+    return { stdout: `unknown command: ${cmd}\n\n${USAGE}`, exit: 1 };
   } catch (e: any) {
     if (cmd === "hook" || cmd === "onstop") return { stdout: "", exit: 0 }; // hook/onstop never disrupt the turn
     return { stdout: `error: ${e.message}`, exit: 1 };
@@ -68,6 +84,9 @@ async function start(argv: string[], env: NodeJS.ProcessEnv) {
     pendingCatchup: true,
   };
   writeState(key, st);
+  // Greet the room so a joiner sees a message immediately, before the host's first shared turn.
+  // Fail-open: a failed greeting must never stop the links from being printed.
+  try { await postShare(st, "👋 Hi! I just started this room."); } catch {}
   const privateLink = buildLink(relayUrl, roomId, secret);
   const namedLink = buildLink(relayUrl, roomId, secret, name);
   return {
@@ -158,9 +177,11 @@ async function status(_env: NodeJS.ProcessEnv) {
   };
 }
 
-// Non-destructive setup check: reports Node version, the relay it will use, and whether the
-// command sandbox (if configured) grants what the plugin needs. Never edits settings — it only
-// prints the exact snippet to add, so nothing about the user's config is mutated behind their back.
+// Non-destructive setup check: reports Node version, the relay it will use, and whether the plugin can
+// actually reach that relay and write its state dir. It probes for real instead of parsing settings
+// files, because Claude Code's effective command-sandbox allowlist merges several config files plus
+// WebFetch(domain:…) permissions and session /sandbox grants; reconstructing that from one file gives
+// false negatives (a host granted via any other route reads as "missing"). Never mutates config.
 async function doctor(env: NodeJS.ProcessEnv) {
   const out: string[] = ["backchannel doctor"];
   const major = Number(process.versions.node.split(".")[0]);
@@ -169,23 +190,43 @@ async function doctor(env: NodeJS.ProcessEnv) {
   let host = "";
   try { host = new URL(relay).hostname; } catch {}
   out.push(`  relay ${relay}`);
-  const wildcard = host.replace(/^[^.]+\./, "*.");
-  let s: any = null;
-  try { s = JSON.parse(readFileSync(`${homedir()}/.claude/settings.json`, "utf8")); } catch {}
-  if (!s?.sandbox) {
-    out.push("  command sandbox not configured. No grants needed (the plugin works as-is).");
-  } else {
-    const net: string[] = s.sandbox?.network?.allowedDomains ?? [];
-    const fsw: string[] = s.sandbox?.filesystem?.allowWrite ?? [];
-    const netOK = net.some((d) => d === host || (d.startsWith("*.") && host.endsWith(d.slice(1))));
-    const fsOK = fsw.includes("~/.backchannel");
-    out.push(`  sandbox: reach ${host} ${netOK ? "OK" : "MISSING"}; write ~/.backchannel ${fsOK ? "OK" : "MISSING"}`);
-    if (!netOK || !fsOK) {
-      out.push("  add to ~/.claude/settings.json (or run /sandbox), then restart Claude Code:");
-      out.push(`    {"sandbox":{"network":{"allowedDomains":["${wildcard}"]},"filesystem":{"allowWrite":["~/.backchannel"]}}}`);
-    }
+
+  const reachOK = await canReach(relay);
+  const writeOK = canWriteStateDir(env);
+  out.push(`  reach ${host}: ${reachOK ? "OK" : "BLOCKED (sandbox or offline)"}`);
+  out.push(`  write state dir: ${writeOK ? "OK" : "BLOCKED"}`);
+  if (!reachOK || !writeOK) {
+    const wildcard = host.replace(/^[^.]+\./, "*.");
+    out.push("  if the command sandbox is blocking this, add to ~/.claude/settings.json (or run /sandbox), then restart:");
+    out.push(`    {"sandbox":{"network":{"allowedDomains":["${wildcard}"]},"filesystem":{"allowWrite":["~/.backchannel"]}}}`);
   }
   return { stdout: out.join("\n"), exit: 0 };
+}
+
+// Any HTTP response (even a 404) proves the network path to the relay is open. Only a thrown
+// connection/sandbox error counts as blocked. Short timeout so doctor never hangs.
+async function canReach(relay: string): Promise<boolean> {
+  try {
+    await fetch(relay, { method: "GET", signal: AbortSignal.timeout(3000) });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+// The plugin writes room state here every turn; a real write+delete is the ground truth for whether
+// the sandbox (or permissions) allow it.
+function canWriteStateDir(env: NodeJS.ProcessEnv): boolean {
+  try {
+    const dir = env.BACKCHANNEL_STATE_DIR || `${homedir()}/.backchannel`;
+    mkdirSync(dir, { recursive: true });
+    const probe = `${dir}/.doctor-probe-${process.pid}`;
+    writeFileSync(probe, "ok");
+    rmSync(probe);
+    return true;
+  } catch {
+    return false;
+  }
 }
 
 function buildSendDirective(st: RoomState): string {
@@ -279,15 +320,20 @@ async function onstop(stdin: string) {
   if (!st || st.status !== "active") return { stdout: "", exit: 0 };
   const marker = extractShareMarker(lastMsg);
   if (!marker) return { stdout: "", exit: 0 };
-  const secret = Buffer.from(st.secret, "base64url");
-  const { encKey, accessToken } = deriveKeys(secret);
+  await postShare(st, marker);
+  if (st.pendingCatchup) writeState(key, { ...st, pendingCatchup: false });
+  return { stdout: "", exit: 0 };
+}
+
+// Encrypt a note and post it to the room as this session (author = your display name, addressed
+// under your opaque authorTag). Shared by onstop (turn markers) and start (the room greeting).
+async function postShare(st: RoomState, text: string): Promise<void> {
+  const { encKey, accessToken } = deriveKeys(Buffer.from(st.secret, "base64url"));
   const payload = encrypt(
-    JSON.stringify({ author: st.displayName, kind: "share", text: marker, ts: new Date().toISOString() }),
+    JSON.stringify({ author: st.displayName, kind: "share", text, ts: new Date().toISOString() }),
     encKey,
   );
   await apiPostEvent(st.relayUrl, st.roomId, accessToken, { author: st.authorTag, type: "finding", payload });
-  if (st.pendingCatchup) writeState(key, { ...st, pendingCatchup: false });
-  return { stdout: "", exit: 0 };
 }
 
 // Real entrypoint — only runs when executed directly as backchannel.cjs or via BACKCHANNEL_CLI_MAIN

@@ -2,7 +2,7 @@
 import { describe, it, expect, vi, afterEach, beforeEach } from "vitest";
 import { writeFileSync, rmSync } from "node:fs";
 import { readState, clearState } from "../src/state.js";
-import { deriveKeys, encrypt } from "../src/crypto.js";
+import { deriveKeys, encrypt, decrypt } from "../src/crypto.js";
 
 const CWD = "/tmp/backchannel-cli-test";
 afterEach(() => { vi.restoreAllMocks(); clearState(CWD); });
@@ -30,6 +30,46 @@ describe("cli", () => {
     expect(r.exit).toBe(0);
     expect(r.stdout).toContain("https://relay/r/ROOMBOTH#k=");          // private link, no ?from
     expect(r.stdout).toContain("https://relay/r/ROOMBOTH?from=Jay#k="); // personalized link
+  });
+
+  it("start greets the room with a decryptable Hi that a joiner would see", async () => {
+    const { run } = await import("../src/cli.js");
+    const posted: any[] = [];
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (url: any, init: any) => {
+      if (String(url).includes("/events")) { posted.push(JSON.parse(init.body)); return new Response(JSON.stringify({ seq: 1 }), { status: 200 }) as any; }
+      return new Response(JSON.stringify({ roomId: "ROOMHI" }), { status: 201 }) as any; // create
+    });
+    const r = await run(["start", "--name", "apple"], { BACKCHANNEL_RELAY_URL: "https://relay", PWD: CWD } as any, "");
+    expect(r.exit).toBe(0);
+    expect(posted.length).toBe(1); // exactly one greeting posted
+    const st = readState(CWD)!;
+    const { encKey } = deriveKeys(Buffer.from(st.secret, "base64url"));
+    const ev = JSON.parse(decrypt(posted[0].payload, encKey)); // relay only ever holds ciphertext
+    expect(ev.kind).toBe("share");
+    expect(ev.author).toBe("apple");
+    expect(ev.text).toContain("Hi");
+  });
+
+  it("start still prints the links if the greeting fails to post (fail-open)", async () => {
+    const { run } = await import("../src/cli.js");
+    vi.spyOn(globalThis, "fetch").mockImplementation(async (url: any) => {
+      if (String(url).includes("/events")) throw new Error("relay down");
+      return new Response(JSON.stringify({ roomId: "ROOMF" }), { status: 201 }) as any;
+    });
+    const r = await run(["start", "--name", "jay"], { BACKCHANNEL_RELAY_URL: "https://relay", PWD: CWD } as any, "");
+    expect(r.exit).toBe(0);
+    expect(r.stdout).toContain("https://relay/r/ROOMF#k=");
+  });
+
+  it("prints usage for no command, help, and --help", async () => {
+    const { run } = await import("../src/cli.js");
+    for (const a of [[] as string[], ["help"], ["--help"]]) {
+      const r = await run(a, {} as any, "");
+      expect(r.exit).toBe(0);
+      expect(r.stdout).toContain("Usage: backchannel");
+      expect(r.stdout).toContain("start");
+      expect(r.stdout).toContain("join");
+    }
   });
 
   it("hook injects decrypted events wrapped in the safety preamble and advances cursor", async () => {
@@ -342,11 +382,23 @@ describe("status", () => {
 });
 
 describe("doctor", () => {
-  it("reports node + relay and exits 0 without mutating anything", async () => {
+  const DDIR = "/tmp/backchannel-doctor-test";
+  it("reports reach OK (any HTTP response) and exits 0 without mutating config", async () => {
     const { run } = await import("../src/cli.js");
-    const r = await run(["doctor"], { BACKCHANNEL_RELAY_URL: "https://relay.example.test" } as any, "");
+    vi.spyOn(globalThis, "fetch").mockResolvedValue(new Response("", { status: 404 })); // 404 still proves reachability
+    const r = await run(["doctor"], { BACKCHANNEL_RELAY_URL: "https://relay.example.test", BACKCHANNEL_STATE_DIR: DDIR } as any, "");
     expect(r.exit).toBe(0);
     expect(r.stdout).toContain("node");
     expect(r.stdout).toContain("relay.example.test");
+    expect(r.stdout).toContain("reach relay.example.test: OK");
+    expect(r.stdout).not.toContain("BLOCKED");
+  });
+  it("reports BLOCKED with the fix snippet when the relay cannot be reached", async () => {
+    const { run } = await import("../src/cli.js");
+    vi.spyOn(globalThis, "fetch").mockRejectedValue(new Error("sandbox blocked"));
+    const r = await run(["doctor"], { BACKCHANNEL_RELAY_URL: "https://relay.example.test", BACKCHANNEL_STATE_DIR: DDIR } as any, "");
+    expect(r.exit).toBe(0);
+    expect(r.stdout).toContain("reach relay.example.test: BLOCKED");
+    expect(r.stdout).toContain('"allowedDomains":["*.example.test"]'); // wildcard suggestion derived from host
   });
 });
