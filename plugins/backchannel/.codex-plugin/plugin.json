@@ -1,7 +1,7 @@
 {
   "name": "backchannel",
   "version": "0.1.0",
-  "description": "E2E-encrypted shared context across separate Codex/Claude Code sessions — an auto-syncing background channel.",
+  "description": "E2E-encrypted shared context across separate Codex/Claude Code sessions. An auto-syncing background channel.",
   "author": {
     "name": "Jay Ronk",
     "url": "https://github.com/j-ronk"
@@ -14,7 +14,7 @@
   "interface": {
     "displayName": "Backchannel",
     "shortDescription": "Shared context across separate AI coding sessions.",
-    "longDescription": "A private, end-to-end-encrypted background channel that keeps separate AI coding sessions aware of each other's progress — separate sessions, shared context, never shared execution.",
+    "longDescription": "A private, end-to-end-encrypted background channel that keeps separate AI coding sessions aware of each other's progress. Separate sessions, shared context, no shared execution.",
     "developerName": "Jay Ronk",
     "category": "Productivity",
     "capabilities": [],

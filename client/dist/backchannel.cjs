@@ -243,7 +243,7 @@ async function start(argv, env) {
   return {
     stdout: `Room ready. Share ONE of these out-of-band:
 
-Private link (recommended \u2014 the relay never sees your name):
+Private link (recommended, the relay never sees your name):
 ${privateLink}
 
 Personalized link (the unfurl preview shows "${name}"; the relay will see that name):
@@ -333,7 +333,7 @@ open = live \xB7 closed/gone = dead \xB7 ended = you left it`,
 async function doctor(env) {
   const out = ["backchannel doctor"];
   const major = Number(process.versions.node.split(".")[0]);
-  out.push(`  node ${process.versions.node} ${major >= 18 ? "OK" : "TOO OLD \u2014 need >=18 (>=24 for the command sandbox)"}`);
+  out.push(`  node ${process.versions.node} ${major >= 18 ? "OK" : "TOO OLD, need >=18 (>=24 for the command sandbox)"}`);
   const relay = env.BACKCHANNEL_RELAY_URL || DEFAULT_RELAY;
   let host = "";
   try {
@@ -348,7 +348,7 @@ async function doctor(env) {
   } catch {
   }
   if (!s?.sandbox) {
-    out.push("  command sandbox not configured \u2014 no grants needed (the plugin works as-is).");
+    out.push("  command sandbox not configured. No grants needed (the plugin works as-is).");
   } else {
     const net = s.sandbox?.network?.allowedDomains ?? [];
     const fsw = s.sandbox?.filesystem?.allowWrite ?? [];
@@ -413,7 +413,7 @@ ${lines.join("\n")}`;
     }
   }
   if (roomClosed) {
-    const closeNote = "The backchannel room has closed \u2014 auto-sharing is now off for this session.";
+    const closeNote = "The backchannel room has closed. Auto-sharing is now off for this session.";
     const ctx2 = [obsBlock, closeNote].filter(Boolean).join("\n\n");
     return {
       stdout: JSON.stringify({ hookSpecificOutput: { hookEventName: "UserPromptSubmit", additionalContext: ctx2 } }),

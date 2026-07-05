@@ -2,7 +2,7 @@
   "name": "backchannel",
   "owner": { "name": "j-ronk" },
   "metadata": {
-    "description": "A private, end-to-end-encrypted background channel that keeps separate AI coding sessions aware of each other's progress — separate sessions, shared context, never shared execution."
+    "description": "A private, end-to-end-encrypted background channel that keeps separate AI coding sessions aware of each other's progress. Separate sessions, shared context, no shared execution."
   },
   "plugins": [
     {

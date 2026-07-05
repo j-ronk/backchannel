@@ -22,7 +22,7 @@ function page(fromRaw: string | undefined): string {
     : `You're invited to collaborate in a Claude Code session`;
   const safeTitle = named ? title : esc(title); // safeFrom already escaped; escape the generic literal's apostrophe
   const desc = esc(
-    "Separate sessions, shared context — your agent sees their progress, never runs their commands. End-to-end encrypted; the server never sees your messages or the room key.",
+    "Separate sessions, shared context. Your agent sees their progress but never runs their commands. It's end-to-end encrypted, so the server never sees your messages or the room key.",
   );
   const headline = named ? `${safeFrom} invited you to collaborate` : "You're invited to collaborate";
   const safeHeadline = named ? headline : esc(headline);
@@ -51,7 +51,7 @@ function page(fromRaw: string | undefined): string {
 <body>
   <div class="brand">&#9671; Claude Code &middot; backchannel</div>
   <h1>${safeHeadline} in their Claude Code session.</h1>
-  <p>Separate sessions, shared context &mdash; your agent sees their progress, never runs their commands. End-to-end encrypted; this server never sees your messages or the room key.</p>
+  <p>Separate sessions, shared context. Your agent sees their progress but never runs their commands. It's end-to-end encrypted, so this server never sees your messages or the room key.</p>
 
   <div class="step">
     <h2>1 &middot; Install backchannel (once), in Claude Code</h2>
@@ -74,10 +74,10 @@ function page(fromRaw: string | undefined): string {
     if (key) {
       var cleanLink = location.origin + location.pathname + location.hash; // drop ?from; keep #k
       joinEl.textContent = '/backchannel:join ' + cleanLink + ' <your name>';
-      noteEl.textContent = 'Replace <your name> with how you want to appear. The room key stays in your browser — it is never sent to the server.';
+      noteEl.textContent = 'Replace <your name> with how you want to appear. The room key stays in your browser and is never sent to the server.';
     } else {
       joinEl.textContent = '(this link is missing its key)';
-      noteEl.textContent = 'Ask the sender for the complete link — it should end with #k=…';
+      noteEl.textContent = 'Ask the sender for the complete link. It should end with #k=…';
     }
   })();
 </script>

@@ -73,7 +73,7 @@ async function start(argv: string[], env: NodeJS.ProcessEnv) {
   return {
     stdout:
       `Room ready. Share ONE of these out-of-band:\n\n` +
-      `Private link (recommended — the relay never sees your name):\n${privateLink}\n\n` +
+      `Private link (recommended, the relay never sees your name):\n${privateLink}\n\n` +
       `Personalized link (the unfurl preview shows "${name}"; the relay will see that name):\n${namedLink}`,
     exit: 0,
   };
@@ -164,7 +164,7 @@ async function status(_env: NodeJS.ProcessEnv) {
 async function doctor(env: NodeJS.ProcessEnv) {
   const out: string[] = ["backchannel doctor"];
   const major = Number(process.versions.node.split(".")[0]);
-  out.push(`  node ${process.versions.node} ${major >= 18 ? "OK" : "TOO OLD — need >=18 (>=24 for the command sandbox)"}`);
+  out.push(`  node ${process.versions.node} ${major >= 18 ? "OK" : "TOO OLD, need >=18 (>=24 for the command sandbox)"}`);
   const relay = env.BACKCHANNEL_RELAY_URL || DEFAULT_RELAY;
   let host = "";
   try { host = new URL(relay).hostname; } catch {}
@@ -173,7 +173,7 @@ async function doctor(env: NodeJS.ProcessEnv) {
   let s: any = null;
   try { s = JSON.parse(readFileSync(`${homedir()}/.claude/settings.json`, "utf8")); } catch {}
   if (!s?.sandbox) {
-    out.push("  command sandbox not configured — no grants needed (the plugin works as-is).");
+    out.push("  command sandbox not configured. No grants needed (the plugin works as-is).");
   } else {
     const net: string[] = s.sandbox?.network?.allowedDomains ?? [];
     const fsw: string[] = s.sandbox?.filesystem?.allowWrite ?? [];
@@ -246,7 +246,7 @@ async function hook(stdin: string) {
     }
   }
   if (roomClosed) {
-    const closeNote = "The backchannel room has closed — auto-sharing is now off for this session.";
+    const closeNote = "The backchannel room has closed. Auto-sharing is now off for this session.";
     const ctx = [obsBlock, closeNote].filter(Boolean).join("\n\n");
     return {
       stdout: JSON.stringify({ hookSpecificOutput: { hookEventName: "UserPromptSubmit", additionalContext: ctx } }),

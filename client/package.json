@@ -1,7 +1,7 @@
 {
   "name": "backchannel-client",
   "version": "0.1.0",
-  "description": "backchannel — E2E-encrypted shared context across separate Claude Code sessions (plugin CLI).",
+  "description": "backchannel: E2E-encrypted shared context across separate Claude Code sessions (plugin CLI).",
   "license": "MIT",
   "author": "Jay Ronk",
   "repository": { "type": "git", "url": "https://github.com/j-ronk/backchannel" },

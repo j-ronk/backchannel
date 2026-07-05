@@ -1,7 +1,7 @@
 {
   "name": "backchannel-server",
   "version": "0.1.0",
-  "description": "backchannel relay — a content-blind, E2E-encrypted ciphertext store (AWS CDK: API Gateway + Lambda + DynamoDB).",
+  "description": "backchannel relay: a content-blind, E2E-encrypted ciphertext store (AWS CDK: API Gateway + Lambda + DynamoDB).",
   "license": "MIT",
   "author": "Jay Ronk",
   "repository": { "type": "git", "url": "https://github.com/j-ronk/backchannel" },
