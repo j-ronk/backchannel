@@ -1,12 +1,10 @@
 # backchannel
 
-A private, end-to-end-encrypted side channel between separate AI coding sessions. Two people (or two of your own sessions) work independently while their agents stay aware of each other's progress. Separate sessions, shared context, no shared execution.
+A private, end-to-end-encrypted side channel between separate AI coding sessions. Two people (or two of your own sessions) work independently while their agents stay aware of each other's progress. No shared execution, and the relay in the middle only ever sees ciphertext.
 
-You stop copy-pasting "here's what I just did" between windows. Each turn, your agent shares a one-line note of what it changed, and the other session picks it up as context on its next turn. The relay in the middle is content-blind. It only ever sees ciphertext.
+Instead of copy-pasting "here's what I just did" between windows, each turn your agent shares a one-line note and the other session picks it up as context.
 
 ## Quickstart (Claude Code)
-
-Install once, then start or join a room:
 
 ```
 /plugin marketplace add j-ronk/backchannel
@@ -16,46 +14,38 @@ Install once, then start or join a room:
 /backchannel:join <link> bob      # the other person joins from the link
 ```
 
-Sharing is automatic after that. The rest are `/backchannel:` commands: `status`, `policy`, `summary`, `doctor`, `stop`.
-
-The default relay is hosted and zero-knowledge (see [Security](#security)), so it works right away. You can [run your own](#self-hosting-the-relay) with one command.
+Sharing is automatic after that. Other commands: `status`, `policy`, `summary`, `doctor`, `stop`. It uses a hosted, zero-knowledge relay by default, so it works right away.
 
 ## How it works
 
-The link is the secret. In `https://<relay>/r/<roomId>#k=<key>`, the `#k=` fragment never leaves the client, because browsers and HTTP clients don't send URL fragments to the server. The client uses it locally (HKDF-SHA256) to derive an AES-256-GCM key that never leaves your machine, plus a per-room access token whose hash is all the relay ever stores.
+The link is the secret: in `https://<relay>/r/<roomId>#k=<key>`, the `#k=` fragment never leaves your machine, because browsers and HTTP clients don't send URL fragments to servers. The client derives an AES-256-GCM key from it locally; the relay only ever stores ciphertext and an opaque access-token hash.
 
-There are no extra model calls. A per-turn hook adds a short "share your progress" instruction, your agent appends one `[[backchannel broadcast]]` line to the reply it was already writing, and a turn-end hook posts that line encrypted. Notes from other people arrive as clearly-labelled, information-only observations. The cost is about 125 fixed tokens per turn and no second inference pass. The [token-overhead notes](docs/token-overhead.md) work through the numbers.
-
-There are two parts. `client/` is the Claude Code plugin, with zero runtime dependencies. `server/` is the relay: an AWS CDK app (API Gateway, Lambda, DynamoDB) that's pay-per-use, costs around $0/month at personal scale, and expires its own data via TTL.
+No extra model calls: a per-turn hook asks your agent to append one `[[backchannel broadcast]]` line, and a turn-end hook posts it encrypted. That costs about 125 tokens per turn ([details](docs/token-overhead.md)).
 
 ## Security
 
-Everything is end-to-end encrypted. The relay sees opaque per-message tags, timestamps, and ciphertext, and nothing else. Not your messages, not your name, not the room key. Rooms are invite-only through the link, so only share it with people you trust. Prompt-injection defences and share-policy redaction are best-effort and not guarantees. [SECURITY.md](SECURITY.md) has the full threat model. Report vulnerabilities through a private GitHub security advisory.
+The relay sees ciphertext, opaque tags, and timestamps, and nothing else: not your messages, your name, or the room key. Rooms are invite-only through the link, so only share it with people you trust. Prompt-injection and redaction defences are best-effort. Full threat model in [SECURITY.md](SECURITY.md).
 
-## Self-hosting the relay
+## Self-hosting
 
-The relay can't read your content, but you can still run your own:
+The relay is an AWS CDK app (API Gateway, Lambda, DynamoDB) that's pay-per-use and runs around $0/month at personal scale. Run your own:
 
 ```bash
-cd server && npm ci && npx cdk deploy   # deploys to your AWS account/region, from your credentials
+cd server && npm ci && npx cdk deploy
 ```
 
-Set `BACKCHANNEL_RELAY_URL` to your deployed API URL to point the client at it. If you use the command sandbox, allowlist that host too; `/backchannel:doctor` prints the exact grants.
+Then set `BACKCHANNEL_RELAY_URL` to your API URL. If you use the command sandbox, `/backchannel:doctor` prints the grants to add.
 
 ## Other CLIs
 
-The core (crypto, protocol, CLI) is CLI-agnostic, so one bundled binary drives every adapter.
-
-**Codex CLI** works today, from this same repo:
+One bundled binary drives every adapter. **Codex CLI** works today:
 
 ```
 codex plugin marketplace add j-ronk/backchannel
 codex plugin add backchannel@backchannel
 ```
 
-Auto-sharing behaves exactly as it does in Claude Code. The room controls come as a skill the agent runs on request, since Codex plugins don't expose slash commands.
-
-**opencode** is planned: a small JS wrapper over the same CLI.
+Auto-sharing is identical; room controls come as a skill the agent runs, since Codex has no slash commands. **opencode** is planned.
 
 ## Development
 
@@ -64,7 +54,7 @@ cd client && npm ci && npx vitest run && npx tsc   # plugin
 cd server && npm ci && npx vitest run && npx tsc   # relay
 ```
 
-`npm run build` in `client/` bundles the CLI to `client/dist/backchannel.cjs`. That file is committed, so installing the plugin needs no build step.
+The client bundle (`client/dist/backchannel.cjs`) is committed, so installing needs no build step.
 
 ## License
 
