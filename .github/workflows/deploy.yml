@@ -1,0 +1,56 @@
+name: Deploy relay
+
+# Manual only. Go to the Actions tab, pick this workflow, and click "Run workflow"
+# (on main) to deploy the relay to AWS.
+#
+# HOW THIS IS SECURE WITHOUT STORED SECRETS:
+#   - No AWS keys live in GitHub. Instead we request a short-lived OIDC token
+#     (`id-token: write`) and hand it to AWS, which returns credentials that
+#     expire in minutes.
+#   - AWS only accepts that token from THIS repo on the main branch (enforced by
+#     the role's trust policy), and the role can only assume the CDK deploy roles.
+#   - The role ARN below is NOT a secret. It grants nothing on its own; the trust
+#     policy is what protects it.
+#
+# NOTE: no `environment:` on the job on purpose — setting one would change the
+# OIDC subject to `...:environment:<name>`, which would not match the trust
+# policy that is scoped to `...:ref:refs/heads/main`.
+run-name: Deploy relay (requested by @${{ github.actor }})
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write # required to request the OIDC token
+  contents: read
+
+concurrency:
+  group: deploy-relay
+  cancel-in-progress: false # never interrupt a deploy already in flight
+
+jobs:
+  deploy:
+    name: cdk deploy
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - name: get short-lived AWS credentials via OIDC
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::865272114773:role/github-actions-backchannel-deploy
+          aws-region: ap-southeast-2
+      - run: npm ci
+      - run: npm run build
+      - name: cdk deploy (context keeps the relay.ronk.au custom domain)
+        run: >-
+          npx cdk deploy --require-approval never
+          -c domain=relay.ronk.au
+          -c certArn=arn:aws:acm:ap-southeast-2:865272114773:certificate/9df03ff0-1b17-4fa2-a060-c29860d6b19e
