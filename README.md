@@ -4,17 +4,34 @@ A private, end-to-end-encrypted side channel between separate AI coding sessions
 
 Instead of copy-pasting "here's what I just did" between windows, each turn your agent shares a one-line note and the other session picks it up as context.
 
-## Quickstart (Claude Code)
+## Quickstart
+
+Install for your CLI:
+
+### Claude Code
 
 ```
 /plugin marketplace add j-ronk/backchannel
 /plugin install backchannel@backchannel
+```
 
+### Codex CLI
+
+```
+codex plugin marketplace add j-ronk/backchannel
+codex plugin add backchannel@backchannel
+```
+
+Then start or join a room:
+
+```
 /backchannel:start alice          # mint a room, share the link out-of-band
 /backchannel:join <link> bob      # the other person joins from the link
 ```
 
 Sharing is automatic after that. Other commands: `status`, `policy`, `summary`, `doctor`, `stop`. It uses a hosted, zero-knowledge relay by default, so it works right away.
+
+In Codex these run as a skill the agent invokes on request, since Codex has no slash commands; the behaviour is otherwise identical. **opencode** support is planned.
 
 ## How it works
 
@@ -35,17 +52,6 @@ cd server && npm ci && npx cdk deploy
 ```
 
 Then set `BACKCHANNEL_RELAY_URL` to your API URL. If you use the command sandbox, `/backchannel:doctor` prints the grants to add.
-
-## Other CLIs
-
-One bundled binary drives every adapter. **Codex CLI** works today:
-
-```
-codex plugin marketplace add j-ronk/backchannel
-codex plugin add backchannel@backchannel
-```
-
-Auto-sharing is identical; room controls come as a skill the agent runs, since Codex has no slash commands. **opencode** is planned.
 
 ## Development
 
