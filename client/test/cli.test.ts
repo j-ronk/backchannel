@@ -44,7 +44,9 @@ describe("cli", () => {
     expect(posted.length).toBe(1); // exactly one greeting posted
     const st = readState(CWD)!;
     const { encKey } = deriveKeys(Buffer.from(st.secret, "base64url"));
-    const ev = JSON.parse(decrypt(posted[0].payload, encKey)); // relay only ever holds ciphertext
+    const plain = decrypt(posted[0].payload, encKey);
+    expect(plain).not.toBeNull();               // it decrypts with the room key
+    const ev = JSON.parse(plain!);              // relay only ever holds ciphertext
     expect(ev.kind).toBe("share");
     expect(ev.author).toBe("apple");
     expect(ev.text).toContain("Hi");

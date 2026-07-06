@@ -1,0 +1,79 @@
+name: CI
+
+# Runs on every push to main and every pull request.
+#
+# SECURITY NOTE: nothing in this file uses a secret. It only installs
+# dependencies, type-checks, tests, and rebuilds the bundle. There is nothing
+# here that could leak. Deploying the relay (which DOES need AWS access) lives in
+# a separate workflow that uses short-lived OIDC tokens, never stored keys.
+#
+# Least privilege: this workflow is only allowed to READ the repo.
+permissions:
+  contents: read
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  client:
+    name: client (plugin)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: client
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: client/package-lock.json
+      - run: npm ci
+      - name: type-check
+        run: npx tsc --noEmit
+      - name: unit tests
+        run: npx vitest run
+      - name: rebuild bundle
+        run: npm run build
+      - name: bundle is in sync with its source (did someone forget to rebuild?)
+        working-directory: ${{ github.workspace }}
+        run: git diff --exit-code -- client/dist plugins/backchannel/dist
+
+  server:
+    name: server (relay)
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: server
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+          cache-dependency-path: server/package-lock.json
+      - run: npm ci
+      - name: type-check
+        run: npx tsc --noEmit
+      - name: unit tests
+        run: npx vitest run
+
+  manifests:
+    name: plugin manifests
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: every manifest is valid JSON and the bundle it points at exists
+        run: |
+          set -euo pipefail
+          for f in .claude-plugin/marketplace.json \
+                   .agents/plugins/marketplace.json \
+                   plugins/backchannel/.codex-plugin/plugin.json \
+                   plugins/backchannel/hooks/hooks.json; do
+            echo "checking $f"
+            node -e "JSON.parse(require('fs').readFileSync(process.argv[1],'utf8'))" "$f"
+          done
+          test -f client/dist/backchannel.cjs
+          test -f plugins/backchannel/dist/backchannel.cjs
