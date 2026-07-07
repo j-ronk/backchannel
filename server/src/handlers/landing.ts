@@ -98,22 +98,23 @@ function page(fromRaw: string | undefined): string {
     font:600 .68rem/1 var(--mono); letter-spacing:.14em;
     text-transform:uppercase; color:var(--muted);
   }
-  .code{ position:relative; margin-top:.7rem }
+  .code{ display:flex; align-items:stretch; gap:.5rem; margin-top:.7rem }
   .code pre{
-    margin:0; overflow-x:auto; background:var(--inset);
-    border:1px solid var(--line); border-radius:10px;
-    padding:.9rem 4.6rem .9rem 1rem;
+    flex:1; min-width:0; margin:0; overflow-x:auto;
+    background:var(--inset); border:1px solid var(--line); border-radius:10px;
+    padding:.9rem 1rem;
   }
   .code code{ font:.82rem/1.6 var(--mono); color:var(--ink); white-space:pre }
+  /* the room link truncates instead of scrolling, so it always ends before the copy button */
+  #join{ display:block; white-space:nowrap; overflow:hidden; text-overflow:ellipsis }
   .code.err pre{ border-color:var(--err) }
   .copy{
-    position:absolute; top:.55rem; right:.55rem;
-    font:600 .66rem/1 var(--mono); letter-spacing:.06em;
-    color:var(--muted); background:var(--panel);
-    border:1px solid var(--line); border-radius:7px;
-    padding:.42rem .6rem; cursor:pointer;
+    flex:none; display:inline-flex; align-items:center; justify-content:center;
+    width:2.9rem; color:var(--muted); background:var(--inset);
+    border:1px solid var(--line); border-radius:10px; cursor:pointer;
     transition:color .15s, border-color .15s, background .15s;
   }
+  .copy svg{ width:1.05rem; height:1.05rem }
   .copy:hover{ color:var(--amber); border-color:var(--amber) }
   .copy:focus-visible{ outline:2px solid var(--amber); outline-offset:2px }
   .copy.ok{ color:var(--ink-on-amber); background:var(--amber); border-color:var(--amber) }
@@ -158,7 +159,7 @@ function page(fromRaw: string | undefined): string {
         <div class="stephead">Room link</div>
         <div class="code" id="joinwrap">
           <pre><code id="join">&hellip;</code></pre>
-          <button class="copy" type="button" data-target="join" aria-label="Copy room link">Copy</button>
+          <button class="copy" type="button" data-target="join" aria-label="Copy room link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path></svg></button>
         </div>
         <p class="note" id="note"></p>
       </div>
@@ -196,15 +197,17 @@ function page(fromRaw: string | undefined): string {
       try { document.execCommand('copy'); } catch (e) {}
       document.body.removeChild(ta);
     }
+    var CHECK = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M20 6 9 17l-5-5"></path></svg>';
     document.querySelectorAll('.copy').forEach(function(btn){
+      var icon = btn.innerHTML; // the copy glyph, restored after the confirmation flash
       btn.addEventListener('click', function(){
         var el = document.getElementById(btn.getAttribute('data-target'));
         if (!el) return;
         var text = el.textContent;
         var flash = function(){
-          btn.textContent = 'Copied';
           btn.classList.add('ok');
-          setTimeout(function(){ btn.textContent = 'Copy'; btn.classList.remove('ok'); }, 1400);
+          btn.innerHTML = CHECK;
+          setTimeout(function(){ btn.classList.remove('ok'); btn.innerHTML = icon; }, 1400);
         };
         if (navigator.clipboard && navigator.clipboard.writeText) {
           navigator.clipboard.writeText(text).then(flash).catch(function(){ fallbackCopy(text); flash(); });
