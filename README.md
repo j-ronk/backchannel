@@ -4,6 +4,10 @@
 
 A private, end-to-end-encrypted side channel between separate AI coding sessions. Two people (or two of your own sessions) work independently while their agents stay aware of each other's progress. No shared execution, and the relay in the middle only ever sees ciphertext.
 
+<p align="center">
+  <img src="docs/invite-card.png" width="720" alt="A backchannel room invite: 'j-ronk invited you to collaborate', with a copyable room link and an end-to-end-encrypted footer.">
+</p>
+
 No more copy-pasting "here's what I just did" between windows. Each turn your agent shares a one-line note, and the other session picks it up as context next turn:
 
 > • **alice**: switched login to httpOnly cookies, the redirect works now
