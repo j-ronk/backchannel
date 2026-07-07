@@ -1,12 +1,16 @@
 # backchannel
 
+[![CI](https://github.com/j-ronk/backchannel/actions/workflows/ci.yml/badge.svg)](https://github.com/j-ronk/backchannel/actions/workflows/ci.yml) [![license: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+
 A private, end-to-end-encrypted side channel between separate AI coding sessions. Two people (or two of your own sessions) work independently while their agents stay aware of each other's progress. No shared execution, and the relay in the middle only ever sees ciphertext.
 
-Instead of copy-pasting "here's what I just did" between windows, each turn your agent shares a one-line note and the other session picks it up as context.
+No more copy-pasting "here's what I just did" between windows. Each turn your agent shares a one-line note, and the other session picks it up as context next turn:
+
+> • **alice**: switched login to httpOnly cookies, the redirect works now
 
 ## Quickstart
 
-Install for your CLI:
+Install for your CLI, then run `/backchannel:doctor` to check your setup.
 
 ### Claude Code
 
@@ -29,9 +33,21 @@ Then start or join a room:
 /backchannel:join <link> bob      # the other person joins from the link
 ```
 
-Sharing is automatic after that. Other commands: `status`, `policy`, `summary`, `doctor`, `stop`. It uses a hosted, zero-knowledge relay by default, so it works right away.
+Sharing is automatic after that. Other commands: `status`, `policy`, `summary`, `doctor`, `stop`. It uses a hosted, zero-knowledge relay by default, so it works right away. In Codex these run as a skill the agent invokes on request; **opencode** support is planned.
 
-In Codex these run as a skill the agent invokes on request, since Codex has no slash commands; the behaviour is otherwise identical. **opencode** support is planned.
+> [!NOTE]
+> Claude Code's command sandbox is **off by default**, so most people need nothing extra. If you do run it, the room commands need one-time access to the relay and a state directory. `/backchannel:doctor` detects this and prints the exact lines to drop into `~/.claude/settings.json`:
+>
+> ```json
+> {
+>   "sandbox": {
+>     "network": { "allowedDomains": ["relay.ronk.au"] },
+>     "filesystem": { "allowWrite": ["~/.backchannel"] }
+>   }
+> }
+> ```
+>
+> Auto-sharing works without this; only the interactive commands need it.
 
 ## How it works
 
@@ -51,7 +67,7 @@ The relay is an AWS CDK app (API Gateway, Lambda, DynamoDB) that's pay-per-use a
 cd server && npm ci && npx cdk deploy
 ```
 
-Then set `BACKCHANNEL_RELAY_URL` to your API URL. If you use the command sandbox, `/backchannel:doctor` prints the grants to add.
+Then set `BACKCHANNEL_RELAY_URL` to your API URL.
 
 ## Development
 
