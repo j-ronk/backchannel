@@ -53,7 +53,7 @@ Sharing is automatic after that. Other commands: `status`, `policy`, `summary`, 
 
 The link is the secret: in `https://<relay>/r/<roomId>#k=<key>`, the `#k=` fragment never leaves your machine, because browsers and HTTP clients don't send URL fragments to servers. The client derives an AES-256-GCM key from it locally; the relay only ever stores ciphertext and an opaque access-token hash.
 
-No extra model calls: a per-turn hook asks your agent to append one `[[backchannel broadcast]]` line, and a turn-end hook posts it encrypted. That costs about 125 tokens per turn ([details](docs/token-overhead.md)).
+No extra model calls: a per-turn hook asks your agent to append one `[[backchannel broadcast]]` line, and a turn-end hook posts it encrypted. That's about 125 tokens per turn, roughly 1% more over a typical coding session ([details](docs/token-overhead.md)).
 
 ## Security
 
