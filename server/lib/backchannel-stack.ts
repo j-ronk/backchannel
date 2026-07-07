@@ -115,6 +115,13 @@ export class BackchannelStack extends Stack {
       integration: new HttpLambdaIntegration("LandingIntegration", landingFn),
     });
 
+    // Generic "what is backchannel" page at the domain root (no roomId).
+    httpApi.addRoutes({
+      path: "/",
+      methods: [HttpMethod.GET],
+      integration: new HttpLambdaIntegration("RootLandingIntegration", landingFn),
+    });
+
     // ── Default-route throttling ──────────────────────────────────────────────
     // Tight rate cap = the denial-of-wallet defence for this public, unauthenticated,
     // pay-per-use API. Excess requests get a 429 AT THE GATEWAY (no Lambda/DynamoDB invoked),

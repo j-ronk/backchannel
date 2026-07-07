@@ -47,4 +47,13 @@ describe("landing", () => {
     expect(r.body).toContain('id="join"');
     expect(r.body).toContain("location.hash"); // client assembles the key-bearing link
   });
+
+  it("serves a generic root page when there is no roomId", async () => {
+    const r = await handler({ rawPath: "/", pathParameters: null, queryStringParameters: null } as any);
+    expect(r.statusCode).toBe(200);
+    expect(r.body).toContain("<title>backchannel: shared context");
+    expect(r.body).toContain("backchannel</h1>");             // generic headline, not an invite
+    expect(r.body).not.toContain('id="join"');                // no room-link block on root
+    expect(r.body).not.toContain("invited you to collaborate");
+  });
 });

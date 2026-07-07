@@ -14,19 +14,41 @@ function esc(s: string): string {
     .replace(/'/g, "&#39;");
 }
 
-function page(fromRaw: string | undefined): string {
+// isRoot renders the generic "what is backchannel" page served at "/"; otherwise this is a
+// per-room invite served at "/r/{roomId}", where the client assembles the key-bearing join link.
+function page(fromRaw: string | undefined, isRoot = false): string {
   const from = (fromRaw ?? "").slice(0, 60).trim();
-  const named = from.length > 0;
+  const named = from.length > 0 && !isRoot;
   const safeFrom = esc(from);
-  const title = named
-    ? `${safeFrom} wants to share their AI coding session with you`
-    : `You're invited to a shared AI coding session`;
-  const safeTitle = named ? title : esc(title); // safeFrom already escaped; escape the generic literal's apostrophe
+  const title = isRoot
+    ? "backchannel: shared context across separate AI coding sessions"
+    : named
+      ? `${safeFrom} wants to share their AI coding session with you`
+      : "You're invited to a shared AI coding session";
+  const safeTitle = named ? title : esc(title); // safeFrom already escaped; escape the generic literals
   const desc = esc(
     "Both sessions stay in the loop on each other's progress. Neither side runs the other's commands. End-to-end encrypted, so the relay only ever sees ciphertext.",
   );
-  const headline = named ? `${safeFrom} invited you to collaborate` : "You're invited to collaborate";
+  const headline = isRoot
+    ? "backchannel"
+    : named
+      ? `${safeFrom} invited you to collaborate`
+      : "You're invited to collaborate";
   const safeHeadline = named ? headline : esc(headline);
+  const lede = isRoot
+    ? "A private side channel between separate AI coding sessions. Both sessions stay in the loop on each other's progress. Neither side runs the other's commands."
+    : "Both sessions stay in the loop on each other's progress. Neither side runs the other's commands.";
+  const roomBlock = isRoot
+    ? ""
+    : `
+      <div class="step" data-anim style="animation-delay:.18s">
+        <div class="stephead">Room link</div>
+        <div class="code" id="joinwrap">
+          <pre><code id="join">&hellip;</code></pre>
+          <button class="copy" type="button" data-target="join" aria-label="Copy room link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path></svg></button>
+        </div>
+        <p class="note" id="note"></p>
+      </div>`;
   return `<!doctype html>
 <html lang="en">
 <head>
@@ -152,17 +174,9 @@ function page(fromRaw: string | undefined): string {
       <span class="rule"></span>
     </div>
     <div class="scr">
-      <h1 data-anim style="animation-delay:.05s"><span class="caret">▸</span>${safeHeadline}.</h1>
-      <p class="lede" data-anim style="animation-delay:.11s">Both sessions stay in the loop on each other's progress. Neither side runs the other's commands.</p>
-
-      <div class="step" data-anim style="animation-delay:.18s">
-        <div class="stephead">Room link</div>
-        <div class="code" id="joinwrap">
-          <pre><code id="join">&hellip;</code></pre>
-          <button class="copy" type="button" data-target="join" aria-label="Copy room link"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="9" y="9" width="12" height="12" rx="2"></rect><path d="M5 15V5a2 2 0 0 1 2-2h10"></path></svg></button>
-        </div>
-        <p class="note" id="note"></p>
-      </div>
+      <h1 data-anim style="animation-delay:.05s"><span class="caret">▸</span>${safeHeadline}${isRoot ? "" : "."}</h1>
+      <p class="lede" data-anim style="animation-delay:.11s">${lede}</p>
+${roomBlock}
 
       <a class="src" data-anim style="animation-delay:.26s" href="https://github.com/${esc(REPO)}#backchannel">New to backchannel? Install it in your AI coding tool &#8599;</a>
 
@@ -179,15 +193,17 @@ function page(fromRaw: string | undefined): string {
     var joinEl = document.getElementById('join');
     var joinWrap = document.getElementById('joinwrap');
     var noteEl = document.getElementById('note');
-    if (key) {
-      var cleanLink = location.origin + location.pathname + location.hash; // drop ?from, keep #k
-      joinEl.textContent = cleanLink;
-      noteEl.textContent = 'Give this link to your backchannel-enabled agent to join the room.';
-    } else {
-      joinEl.textContent = '(this link is missing its key)';
-      joinWrap.className = 'code err';
-      var hidden = joinWrap.querySelector('.copy'); if (hidden) hidden.style.display = 'none';
-      noteEl.textContent = 'Ask the sender for the complete link. It should end with #k=…';
+    if (joinEl) { // the room-link block is absent on the generic root page
+      if (key) {
+        var cleanLink = location.origin + location.pathname + location.hash; // drop ?from, keep #k
+        joinEl.textContent = cleanLink;
+        noteEl.textContent = 'Give this link to your backchannel-enabled agent to join the room.';
+      } else {
+        joinEl.textContent = '(this link is missing its key)';
+        joinWrap.className = 'code err';
+        var hidden = joinWrap.querySelector('.copy'); if (hidden) hidden.style.display = 'none';
+        noteEl.textContent = 'Ask the sender for the complete link. It should end with #k=…';
+      }
     }
     function fallbackCopy(text){
       var ta = document.createElement('textarea');
@@ -229,5 +245,5 @@ export const handler = async (evt: any) => ({
     "content-security-policy":
       "default-src 'none'; style-src 'unsafe-inline'; script-src 'unsafe-inline'; connect-src 'none'; img-src 'none'; frame-ancestors 'none'",
   },
-  body: page(evt.queryStringParameters?.from),
+  body: page(evt.queryStringParameters?.from, !evt.pathParameters?.roomId), // no roomId => the generic root page
 });
