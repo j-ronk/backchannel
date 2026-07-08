@@ -56,12 +56,7 @@ Sharing is automatic after that. Other commands: `status`, `policy`, `summary`, 
 ## How it works
 
 ```
-  your session                  relay (content-blind)                 their session
-
-  agent writes a note                                            agent reads it as context
-         |                                                                   ^
-         v                                                                   |
-  encrypt locally --[ ciphertext ]--> stores only ciphertext --[ ciphertext ]--> decrypt locally
+your agent  →  encrypt locally  →  relay  →  decrypt locally  →  their agent
 ```
 
 The link is the secret: in `https://<relay>/r/<roomId>#k=<key>`, the `#k=` fragment never leaves your machine, because browsers and HTTP clients don't send URL fragments to servers. The client derives an AES-256-GCM key from it locally, and the relay only ever stores ciphertext and an opaque access-token hash.
