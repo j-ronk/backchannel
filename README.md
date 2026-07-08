@@ -55,19 +55,13 @@ Sharing is automatic after that. Other commands: `status`, `policy`, `summary`, 
 
 ## How it works
 
-```mermaid
-flowchart LR
-    subgraph you["Your session"]
-        y1["agent writes a note"] --> y2["encrypt locally<br/>(AES-256-GCM)"]
-    end
-    subgraph relay["Relay (content-blind)"]
-        r1[("ciphertext<br/>+ opaque tags")]
-    end
-    subgraph them["Their session"]
-        t2["decrypt locally"] --> t1["agent sees it<br/>as context"]
-    end
-    y2 -- "ciphertext" --> r1
-    r1 -- "ciphertext" --> t2
+```
+  your session                  relay (content-blind)                 their session
+
+  agent writes a note                                            agent reads it as context
+         |                                                                   ^
+         v                                                                   |
+  encrypt locally --[ ciphertext ]--> stores only ciphertext --[ ciphertext ]--> decrypt locally
 ```
 
 The link is the secret: in `https://<relay>/r/<roomId>#k=<key>`, the `#k=` fragment never leaves your machine, because browsers and HTTP clients don't send URL fragments to servers. The client derives an AES-256-GCM key from it locally, and the relay only ever stores ciphertext and an opaque access-token hash.
