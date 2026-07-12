@@ -1,6 +1,6 @@
 {
   "name": "backchannel",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "E2E-encrypted shared context across separate Codex/Claude Code sessions. An auto-syncing background channel.",
   "author": {
     "name": "Jay Ronk",

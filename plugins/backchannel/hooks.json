@@ -1,0 +1,10 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      { "hooks": [{ "type": "command", "command": "node ./dist/backchannel.cjs hook" }] }
+    ],
+    "Stop": [
+      { "hooks": [{ "type": "command", "command": "node ./dist/backchannel.cjs onstop" }] }
+    ]
+  }
+}

@@ -8,10 +8,10 @@ description: Manage a backchannel room. Start, join, check status, set the share
 Backchannel keeps this session and a teammate's session aware of each other's progress automatically; the per-turn hooks do the sharing and receiving. This skill is for the one-off control actions. Run the bundled CLI with Node:
 
 ```
-node "${PLUGIN_ROOT}/dist/backchannel.cjs" <command>
+node ../../dist/backchannel.cjs <command>
 ```
 
-Show the CLI's output to the user verbatim. For `start`, always print the full room link(s). Commands:
+That path is relative to this skill's own directory (the working directory when the skill runs). Show the CLI's output to the user verbatim. For `start`, always print the full room link(s). Commands:
 
 - `start <display-name>` mints a room and prints a private link plus a personalized (`?from=`) link to share out-of-band. A display name is required.
 - `join "<full room link incl. #k=… fragment>" --name <display-name>` joins a room from a link. Pass the whole link (including the `#k=` fragment) as one quoted argument. A display name is required.
